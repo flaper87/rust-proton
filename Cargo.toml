@@ -1,0 +1,12 @@
+[package]
+name = "rust-proton"
+version = "0.0.1"
+authors = ["Flavio Percoco <flaper87@gmail.com>"]
+
+[dependencies.proton-sys]
+path = "proton-sys"
+
+[dependencies]
+libc = "0.1"
+log = "0.3"
+rustc-serialize = "0.3"

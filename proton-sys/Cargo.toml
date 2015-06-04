@@ -1,0 +1,9 @@
+[package]
+
+name = "proton-sys"
+version = "0.0.1"
+authors = ["Flavio Percoco <flaper87@gmail.com>"]
+
+[dependencies]
+libc = "0.1.7"
+bitflags = "0.1.1"
