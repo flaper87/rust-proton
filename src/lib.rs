@@ -3,7 +3,7 @@
 #![allow(unused_variables)]
 #![allow(unused_imports)]
 
-//extern crate mio;
+extern crate mio;
 extern crate libc;
 extern crate rustc_serialize;
 extern crate proton_sys;
@@ -15,5 +15,9 @@ pub use proton::{
     Transport
 };
 
-//mod io;
+mod io;
 mod proton;
+
+pub use io::{
+    AmqpHandler
+};
