@@ -55,7 +55,7 @@ impl AmqpSocket {
             }
             Err(e) => debug!("not implemented; client err={:?}", e),
         }
-        event_loop.reregister(&self.sock, self.token.unwrap(), self.interest, PollOpt::edge())
+        event_loop.reregister(&self.sock, self.token.unwrap(), self.interest, PollOpt::edge() | PollOpt::oneshot())
     }
 
     fn readable(&mut self, event_loop: &mut AmqpEventLoop) -> io::Result<()> {
@@ -66,17 +66,17 @@ impl AmqpSocket {
                 panic!("We just got readable, but were unable to read from the socket?");
             }
             Ok(Some(r)) => {
-                debug!("CONN : we read {} bytes!", r);
-                let lbuf = buf.flip();
-                debug!("CON : read buf = {:?}", String::from_utf8(lbuf.bytes().to_vec()).unwrap());
-                buf = lbuf.flip();
-                //self.transport.push(buf.bytes());
+                println!("CONN : we read {} bytes!", r);
+
+                //self.transport.push(buf.mut_bytes());
                 if !self.transport.has_capacity() {
                     debug!("No capacity. Turning to writable");
                     //self.interest.remove(Interest::readable());
                     //self.interest.insert(Interest::writable());
                 }
-                self.interest.insert(Interest::readable());
+
+                self.interest.remove(Interest::readable());
+                self.interest.insert(Interest::writable());
             }
             Err(e) => {
                 debug!("not implemented; client err={:?}", e);
@@ -106,7 +106,7 @@ impl AmqpAcceptor {
             .ok().expect("could not add connectiont o slab");
         // Register the connection
         self.conns[tok].token = Some(tok);
-        event_loop.register_opt(&self.conns[tok].sock, tok, Interest::readable(), PollOpt::edge())
+        event_loop.register_opt(&self.conns[tok].sock, tok, Interest::readable(), PollOpt::edge() | PollOpt::oneshot())
             .ok().expect("could not register socket with event loop");
         Ok(())
     }
@@ -164,6 +164,15 @@ impl AmqpHandler {
 impl Handler for AmqpHandler {
     type Timeout = usize;
     type Message = ();
+
+    fn writable(&mut self, event_loop: &mut AmqpEventLoop, token: Token) {
+        println!("writable");
+        match token {
+            Token(0) => panic!("received writable for token 0"),
+            //CLIENT => self.client.writable(event_loop).unwrap(),
+            _ => self.sock.conn_writable(event_loop, token).unwrap()
+        };
+    }
 
     fn readable(&mut self, event_loop: &mut AmqpEventLoop, token: Token, hint: ReadHint) {
         assert!(hint.is_data());

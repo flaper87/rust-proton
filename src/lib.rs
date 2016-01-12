@@ -8,8 +8,7 @@ extern crate libc;
 extern crate rustc_serialize;
 extern crate proton_sys;
 
-#[macro_use]
-extern crate log;
+#[macro_use] extern crate log;
 
 pub use proton::{
     Transport

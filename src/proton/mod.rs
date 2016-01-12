@@ -328,6 +328,14 @@ impl Connection {
 //    }
 //}
 
+pub struct Container;
+
+impl Container {
+    pub fn new() -> Container {
+        Container
+    }
+}
+
 pub struct Transport {
     ptr: *mut proton_sys::pn_transport_t
 }
@@ -372,6 +380,17 @@ impl Transport {
 
     pub fn capacity(&mut self) -> i64 {
         unsafe {proton_sys::pn_transport_capacity(self.ptr)}
+    }
+
+    pub fn pending(&mut self) -> i8 {
+        let pending = unsafe {proton_sys::pn_transport_pending(self.ptr) as i8};
+
+        if pending >= proton_sys::PN_EOS {
+            pending
+        } else {
+            // needs check for errors instead of returning pending
+            pending
+        }
     }
 
     pub fn push(&mut self, bytes: &[u8]) {
