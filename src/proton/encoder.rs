@@ -5,26 +5,53 @@ use rustc_serialize as serialize;
 use std::marker::PhantomData;
 use proton_sys;
 
-/// The errors that can arise while parsing a JSON stream.
+/*
+Marshal encodes a Rust value as AMQP data in buffer based on its type.
+If buffer is nil, or is not large enough, a new buffer  is created.
+
+Returns the buffer used for encoding with len() adjusted to the actual size of data.
+
+Rust types are encoded as follows
+
+ +-------------------------------------+--------------------------------------------+
+ |Rust type                            |AMQP type                                   |
+ +-------------------------------------+--------------------------------------------+
+ |bool                                 |bool                                        |
+ +-------------------------------------+--------------------------------------------+
+ |int8, int16, int32, int64 (int)      |byte, short, int, long (int or long)        |
+ +-------------------------------------+--------------------------------------------+
+ |uint8, uint16, uint32, uint64 (uint) |ubyte, ushort, uint, ulong (uint or ulong)  |
+ +-------------------------------------+--------------------------------------------+
+ |float32, float64                     |float, double.                              |
+ +-------------------------------------+--------------------------------------------+
+ |string                               |string                                      |
+ +-------------------------------------+--------------------------------------------+
+ |[]byte, Binary                       |binary                                      |
+ +-------------------------------------+--------------------------------------------+
+ |Symbol                               |symbol                                      |
+ +-------------------------------------+--------------------------------------------+
+ |interface{}                          |the contained type                          |
+ +-------------------------------------+--------------------------------------------+
+ |nil                                  |null                                        |
+ +-------------------------------------+--------------------------------------------+
+ |map[K]T                              |map with K and T converted as above         |
+ +-------------------------------------+--------------------------------------------+
+ |Map                                  |map, may have mixed types for keys, values  |
+ +-------------------------------------+--------------------------------------------+
+ |[]T                                  |list with T converted as above              |
+ +-------------------------------------+--------------------------------------------+
+ |List                                 |list, may have mixed types  values          |
+ +-------------------------------------+--------------------------------------------+
+
+TODO: Update the table to match rust types
+TODO Rust types: array, slice, struct
+
+Rust types that cannot be marshaled: complex64/128, uintptr, function, interface, channel
+*/
+
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum ErrorCode {
-    InvalidSyntax,
-    InvalidNumber,
-    EOFWhileParsingObject,
-    EOFWhileParsingArray,
-    EOFWhileParsingValue,
-    EOFWhileParsingString,
-    KeyMustBeAString,
-    ExpectedColon,
-    TrailingCharacters,
-    TrailingComma,
-    InvalidEscape,
-    InvalidUnicodeCodePoisize,
-    LoneLeadingSurrogateInHexEscape,
-    UnexpectedEndOfHexEscape,
-    UnrecognizedHex,
-    NotFourDigit,
-    NotUtf8,
+// ADD SOMETHING HERE
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -288,21 +315,40 @@ pub fn encode<T: serialize::Encodable>(object: &T) -> Result<Vec<i8>, EncoderErr
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::ffi::CStr;
+    use std::slice;
+    use std::str;
     use proton_sys;
 
     #[test]
-    fn test_ushort_encoding() {
+    fn test_string_encoding() {
         let value = "testing";
         let encoded = encode(&value).unwrap();
-        let mut data;
+        let data;
         unsafe {
             data = proton_sys::pn_data(1024);
-            proton_sys::pn_data_decode(data,
-                                       encoded.as_ptr(),
-                                       encoded.len() as u64);
+            let err = proton_sys::pn_data_decode(data,
+                                                 encoded.as_ptr(),
+                                                 encoded.len() as u64);
+            println!("{}", err);
         }
 
         assert_eq!(1, unsafe{proton_sys::pn_data_size(data)});
+
+        let type_name = unsafe{
+            let t = proton_sys::pn_data_type(data);
+            let name = proton_sys::pn_type_name(t);
+            CStr::from_ptr(name).to_str().unwrap()
+        };
+        assert_eq!("PN_STRING", type_name);
+
+        let data_content = unsafe {
+            let pn_bytes = proton_sys::pn_data_get_string(data);
+            let data: &[u8] = slice::from_raw_parts(pn_bytes.start as *const u8,
+                                                    pn_bytes.size as usize);
+            str::from_utf8(data).unwrap()
+        };
+        assert_eq!("testing", data_content);
 
     }
 }
