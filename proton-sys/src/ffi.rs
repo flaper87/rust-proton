@@ -582,7 +582,7 @@ pub type pn_map_t = Struct_pn_map_t;
 pub enum Struct_pn_hash_t { }
 pub type pn_hash_t = Struct_pn_hash_t;
 pub type pn_iterator_next_t =
-    ::std::option::Option<extern "C" fn(state: *mut ::libc::c_void)
+    ::std::option::Option<unsafe extern "C" fn(state: *mut ::libc::c_void)
                               -> *mut ::libc::c_void>;
 pub enum Struct_pn_iterator_t { }
 pub type pn_iterator_t = Struct_pn_iterator_t;
@@ -593,37 +593,43 @@ pub type pn_record_t = Struct_pn_record_t;
 pub struct Struct_pn_class_t {
     pub name: *const ::libc::c_char,
     pub cid: pn_cid_t,
-    pub newinst: ::std::option::Option<extern "C" fn(arg1: *const pn_class_t,
-                                                     arg2: size_t)
+    pub newinst: ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                                *const pn_class_t,
+                                                            arg2: size_t)
                                            -> *mut ::libc::c_void>,
-    pub initialize: ::std::option::Option<extern "C" fn(arg1:
-                                                            *mut ::libc::c_void)
+    pub initialize: ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                                   *mut ::libc::c_void)
                                               -> ()>,
-    pub incref: ::std::option::Option<extern "C" fn(arg1: *mut ::libc::c_void)
+    pub incref: ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                               *mut ::libc::c_void)
                                           -> ()>,
-    pub decref: ::std::option::Option<extern "C" fn(arg1: *mut ::libc::c_void)
+    pub decref: ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                               *mut ::libc::c_void)
                                           -> ()>,
-    pub refcount: ::std::option::Option<extern "C" fn(arg1:
-                                                          *mut ::libc::c_void)
+    pub refcount: ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                                 *mut ::libc::c_void)
                                             -> ::libc::c_int>,
-    pub finalize: ::std::option::Option<extern "C" fn(arg1:
-                                                          *mut ::libc::c_void)
+    pub finalize: ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                                 *mut ::libc::c_void)
                                             -> ()>,
-    pub free: ::std::option::Option<extern "C" fn(arg1: *mut ::libc::c_void)
+    pub free: ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                             *mut ::libc::c_void)
                                         -> ()>,
-    pub reify: ::std::option::Option<extern "C" fn(arg1: *mut ::libc::c_void)
+    pub reify: ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                              *mut ::libc::c_void)
                                          -> *const pn_class_t>,
-    pub hashcode: ::std::option::Option<extern "C" fn(arg1:
-                                                          *mut ::libc::c_void)
+    pub hashcode: ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                                 *mut ::libc::c_void)
                                             -> uintptr_t>,
-    pub compare: ::std::option::Option<extern "C" fn(arg1:
-                                                         *mut ::libc::c_void,
-                                                     arg2:
-                                                         *mut ::libc::c_void)
+    pub compare: ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                                *mut ::libc::c_void,
+                                                            arg2:
+                                                                *mut ::libc::c_void)
                                            -> intptr_t>,
-    pub inspect: ::std::option::Option<extern "C" fn(arg1:
-                                                         *mut ::libc::c_void,
-                                                     arg2: *mut pn_string_t)
+    pub inspect: ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                                *mut ::libc::c_void,
+                                                            arg2:
+                                                                *mut pn_string_t)
                                            -> ::libc::c_int>,
 }
 impl ::std::clone::Clone for Struct_pn_class_t {
@@ -849,8 +855,8 @@ pub const PN_SELECTABLE_FINAL: ::libc::c_uint = 41;
 pub type pn_event_type_t = Enum_Unnamed28;
 pub type pn_trace_t = ::libc::c_int;
 pub type pn_tracer_t =
-    ::std::option::Option<extern "C" fn(transport: *mut pn_transport_t,
-                                        message: *const ::libc::c_char)
+    ::std::option::Option<unsafe extern "C" fn(transport: *mut pn_transport_t,
+                                               message: *const ::libc::c_char)
                               -> ()>;
 pub type pn_socket_t = ::libc::c_int;
 pub enum Struct_pn_io_t { }
@@ -893,7 +899,7 @@ pub type pn_handshaker_t = pn_handler_t;
 pub type pn_iohandler_t = pn_handler_t;
 pub type pn_flowcontroller_t = pn_handler_t;
 pub type pn_logger_t =
-    ::std::option::Option<extern "C" fn(message: *const ::libc::c_char)
+    ::std::option::Option<unsafe extern "C" fn(message: *const ::libc::c_char)
                               -> ()>;
 pub enum Struct_pn_message_t { }
 pub type pn_message_t = Struct_pn_message_t;
@@ -1423,6 +1429,10 @@ extern "C" {
      -> size_t;
     pub fn pn_session_set_incoming_capacity(session: *mut pn_session_t,
                                             capacity: size_t) -> ();
+    pub fn pn_session_get_outgoing_window(session: *mut pn_session_t)
+     -> size_t;
+    pub fn pn_session_set_outgoing_window(session: *mut pn_session_t,
+                                          window: size_t) -> ();
     pub fn pn_session_outgoing_bytes(session: *mut pn_session_t) -> size_t;
     pub fn pn_session_incoming_bytes(session: *mut pn_session_t) -> size_t;
     pub fn pn_session_head(connection: *mut pn_connection_t,
@@ -1599,7 +1609,8 @@ extern "C" {
     pub fn pn_transport_get_channel_max(transport: *mut pn_transport_t)
      -> uint16_t;
     pub fn pn_transport_set_channel_max(transport: *mut pn_transport_t,
-                                        channel_max: uint16_t) -> ();
+                                        channel_max: uint16_t)
+     -> ::libc::c_int;
     pub fn pn_transport_remote_channel_max(transport: *mut pn_transport_t)
      -> uint16_t;
     pub fn pn_transport_get_max_frame(transport: *mut pn_transport_t)
@@ -1679,37 +1690,37 @@ extern "C" {
     pub fn pn_selectable() -> *mut pn_selectable_t;
     pub fn pn_selectable_on_readable(sel: *mut pn_selectable_t,
                                      readable:
-                                         ::std::option::Option<extern "C" fn(arg1:
-                                                                                 *mut pn_selectable_t)
+                                         ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                                                        *mut pn_selectable_t)
                                                                    -> ()>)
      -> ();
     pub fn pn_selectable_on_writable(sel: *mut pn_selectable_t,
                                      writable:
-                                         ::std::option::Option<extern "C" fn(arg1:
-                                                                                 *mut pn_selectable_t)
+                                         ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                                                        *mut pn_selectable_t)
                                                                    -> ()>)
      -> ();
     pub fn pn_selectable_on_expired(sel: *mut pn_selectable_t,
                                     expired:
-                                        ::std::option::Option<extern "C" fn(arg1:
-                                                                                *mut pn_selectable_t)
+                                        ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                                                       *mut pn_selectable_t)
                                                                   -> ()>)
      -> ();
     pub fn pn_selectable_on_error(sel: *mut pn_selectable_t,
                                   error:
-                                      ::std::option::Option<extern "C" fn(arg1:
-                                                                              *mut pn_selectable_t)
+                                      ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                                                     *mut pn_selectable_t)
                                                                 -> ()>) -> ();
     pub fn pn_selectable_on_release(sel: *mut pn_selectable_t,
                                     release:
-                                        ::std::option::Option<extern "C" fn(arg1:
-                                                                                *mut pn_selectable_t)
+                                        ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                                                       *mut pn_selectable_t)
                                                                   -> ()>)
      -> ();
     pub fn pn_selectable_on_finalize(sel: *mut pn_selectable_t,
                                      finalize:
-                                         ::std::option::Option<extern "C" fn(arg1:
-                                                                                 *mut pn_selectable_t)
+                                         ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                                                        *mut pn_selectable_t)
                                                                    -> ()>)
      -> ();
     pub fn pn_selectable_attachments(sel: *mut pn_selectable_t)
@@ -1767,6 +1778,7 @@ extern "C" {
     pub fn pn_ssl_get_cipher_name(ssl: *mut pn_ssl_t,
                                   buffer: *mut ::libc::c_char, size: size_t)
      -> u8;
+    pub fn pn_ssl_get_ssf(ssl: *mut pn_ssl_t) -> ::libc::c_int;
     pub fn pn_ssl_get_protocol_name(ssl: *mut pn_ssl_t,
                                     buffer: *mut ::libc::c_char, size: size_t)
      -> u8;
@@ -1780,25 +1792,25 @@ extern "C" {
     pub fn pn_ssl_get_remote_subject(ssl: *mut pn_ssl_t)
      -> *const ::libc::c_char;
     pub fn pn_handler(dispatch:
-                          ::std::option::Option<extern "C" fn(arg1:
-                                                                  *mut pn_handler_t,
-                                                              arg2:
-                                                                  *mut pn_event_t,
-                                                              arg3:
-                                                                  pn_event_type_t)
+                          ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                                         *mut pn_handler_t,
+                                                                     arg2:
+                                                                         *mut pn_event_t,
+                                                                     arg3:
+                                                                         pn_event_type_t)
                                                     -> ()>)
      -> *mut pn_handler_t;
     pub fn pn_handler_new(dispatch:
-                              ::std::option::Option<extern "C" fn(arg1:
-                                                                      *mut pn_handler_t,
-                                                                  arg2:
-                                                                      *mut pn_event_t,
-                                                                  arg3:
-                                                                      pn_event_type_t)
+                              ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                                             *mut pn_handler_t,
+                                                                         arg2:
+                                                                             *mut pn_event_t,
+                                                                         arg3:
+                                                                             pn_event_type_t)
                                                         -> ()>, size: size_t,
                           finalize:
-                              ::std::option::Option<extern "C" fn(arg1:
-                                                                      *mut pn_handler_t)
+                              ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                                             *mut pn_handler_t)
                                                         -> ()>)
      -> *mut pn_handler_t;
     pub fn pn_handler_free(handler: *mut pn_handler_t) -> ();
@@ -1862,6 +1874,7 @@ extern "C" {
      -> *mut pn_task_t;
     pub fn pn_timer_tasks(timer: *mut pn_timer_t) -> ::libc::c_int;
     pub fn pn_task_attachments(task: *mut pn_task_t) -> *mut pn_record_t;
+    pub fn pn_task_cancel(task: *mut pn_task_t) -> ();
     pub fn pn_class_reactor(clazz: *const pn_class_t,
                             object: *mut ::libc::c_void) -> *mut pn_reactor_t;
     pub fn pn_object_reactor(object: *mut ::libc::c_void)
@@ -2127,6 +2140,7 @@ extern "C" {
     pub fn pn_parser_error(parser: *mut pn_parser_t) -> *const ::libc::c_char;
     pub fn pn_parser_free(parser: *mut pn_parser_t) -> ();
     pub fn pn_sasl(transport: *mut pn_transport_t) -> *mut pn_sasl_t;
+    pub fn pn_sasl_extended() -> u8;
     pub fn pn_sasl_done(sasl: *mut pn_sasl_t, outcome: pn_sasl_outcome_t)
      -> ();
     pub fn pn_sasl_outcome(sasl: *mut pn_sasl_t) -> pn_sasl_outcome_t;
@@ -2134,6 +2148,9 @@ extern "C" {
     pub fn pn_sasl_get_mech(sasl: *mut pn_sasl_t) -> *const ::libc::c_char;
     pub fn pn_sasl_allowed_mechs(sasl: *mut pn_sasl_t,
                                  mechs: *const ::libc::c_char) -> ();
+    pub fn pn_sasl_set_allow_insecure_mechs(sasl: *mut pn_sasl_t,
+                                            insecure: u8) -> ();
+    pub fn pn_sasl_get_allow_insecure_mechs(sasl: *mut pn_sasl_t) -> u8;
     pub fn pn_sasl_config_name(sasl: *mut pn_sasl_t,
                                name: *const ::libc::c_char) -> ();
     pub fn pn_sasl_config_path(sasl: *mut pn_sasl_t,
