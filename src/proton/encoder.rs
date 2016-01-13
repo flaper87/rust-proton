@@ -320,6 +320,33 @@ mod tests {
     use std::str;
     use proton_sys;
 
+    macro_rules! create_test {
+        ($func:ident, $get_data:ident, $value:expr) => (
+            #[test]
+            fn $func() {
+                let value = $value;
+                let encoded = encode(&value).unwrap();
+                let data;
+                unsafe {
+                    data = proton_sys::pn_data(1024);
+                    let err = proton_sys::pn_data_decode(data,
+                                                         encoded.as_ptr(),
+                                                         encoded.len() as u64);
+                }
+
+                assert_eq!(1, unsafe{proton_sys::pn_data_size(data)});
+                assert_eq!(format!("pn_{:}", stringify!($func)),
+                           get_type_name(data).to_lowercase());
+
+                let data_content = unsafe {
+                    //concat_idents!(proton_sys::pn_data_get_, $func)(data)
+                    proton_sys::$get_data(data)
+                };
+                assert_eq!(value, data_content);
+            }
+        )
+    }
+
     fn get_type_name<'a>(data: *mut proton_sys::pn_data_t) -> &'a str {
         unsafe{
             let t = proton_sys::pn_data_type(data);
@@ -353,25 +380,13 @@ mod tests {
 
     }
 
-    #[test]
-    fn test_u8_encoding() {
-        let value = 1u8;
-        let encoded = encode(&value).unwrap();
-        let data;
-        unsafe {
-            data = proton_sys::pn_data(1024);
-            let err = proton_sys::pn_data_decode(data,
-                                                 encoded.as_ptr(),
-                                                 encoded.len() as u64);
-        }
+    create_test!(ubyte, pn_data_get_ubyte, 1u8);
+    create_test!(ushort, pn_data_get_ushort, 1u16);
+    create_test!(uint, pn_data_get_uint, 1u32);
+    create_test!(ulong, pn_data_get_ulong, 1u64);
 
-        assert_eq!(1, unsafe{proton_sys::pn_data_size(data)});
-        assert_eq!("PN_UBYTE", get_type_name(data));
-
-        let data_content = unsafe {
-            proton_sys::pn_data_get_ubyte(data)
-        };
-        assert_eq!(value, data_content);
-
-    }
+    create_test!(byte, pn_data_get_byte, 1i8);
+    create_test!(short, pn_data_get_short, 1i16);
+    create_test!(int, pn_data_get_int, 1i32);
+    create_test!(long, pn_data_get_long, 1i64);
 }
