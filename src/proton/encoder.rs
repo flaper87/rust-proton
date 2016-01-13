@@ -320,6 +320,14 @@ mod tests {
     use std::str;
     use proton_sys;
 
+    fn get_type_name<'a>(data: *mut proton_sys::pn_data_t) -> &'a str {
+        unsafe{
+            let t = proton_sys::pn_data_type(data);
+            let name = proton_sys::pn_type_name(t);
+            CStr::from_ptr(name).to_str().unwrap()
+        }
+    }
+
     #[test]
     fn test_string_encoding() {
         let value = "testing";
@@ -330,17 +338,10 @@ mod tests {
             let err = proton_sys::pn_data_decode(data,
                                                  encoded.as_ptr(),
                                                  encoded.len() as u64);
-            println!("{}", err);
         }
 
         assert_eq!(1, unsafe{proton_sys::pn_data_size(data)});
-
-        let type_name = unsafe{
-            let t = proton_sys::pn_data_type(data);
-            let name = proton_sys::pn_type_name(t);
-            CStr::from_ptr(name).to_str().unwrap()
-        };
-        assert_eq!("PN_STRING", type_name);
+        assert_eq!("PN_STRING", get_type_name(data));
 
         let data_content = unsafe {
             let pn_bytes = proton_sys::pn_data_get_string(data);
@@ -348,7 +349,29 @@ mod tests {
                                                     pn_bytes.size as usize);
             str::from_utf8(data).unwrap()
         };
-        assert_eq!("testing", data_content);
+        assert_eq!(value, data_content);
+
+    }
+
+    #[test]
+    fn test_u8_encoding() {
+        let value = 1u8;
+        let encoded = encode(&value).unwrap();
+        let data;
+        unsafe {
+            data = proton_sys::pn_data(1024);
+            let err = proton_sys::pn_data_decode(data,
+                                                 encoded.as_ptr(),
+                                                 encoded.len() as u64);
+        }
+
+        assert_eq!(1, unsafe{proton_sys::pn_data_size(data)});
+        assert_eq!("PN_UBYTE", get_type_name(data));
+
+        let data_content = unsafe {
+            proton_sys::pn_data_get_ubyte(data)
+        };
+        assert_eq!(value, data_content);
 
     }
 }
