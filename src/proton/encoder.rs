@@ -389,4 +389,6 @@ mod tests {
     create_test!(short, pn_data_get_short, 1i16);
     create_test!(int, pn_data_get_int, 1i32);
     create_test!(long, pn_data_get_long, 1i64);
+
+    create_test!(float, pn_data_get_float, 1f32);
 }
